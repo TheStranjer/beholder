@@ -1,7 +1,7 @@
 {
-	bearer_token:        "YOUR BEARER TOKEN HERE",
-	instance:            "yourinstance.tld",
-	attempted_instances: ["someinstance.tld", "someotherinstance.tld"],
-	limit:               20,
-	last_id:             null,
+	"bearer_token":        "YOUR BEARER TOKEN",
+	"instance":            "yourinstance.tld",
+	"attempted_instances": ["someinstance.tld", "someotherinstance.tld"],
+	"limit":               20,
+	"last_id":             null
 }
