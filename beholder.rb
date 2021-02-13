@@ -30,6 +30,7 @@ class Beholder
         update_last_id(np)
       end
 
+      instances.reject! { |instance| instance.nil? }
       instances.collect! { |instance| instance.downcase }
       instances.uniq!
 
