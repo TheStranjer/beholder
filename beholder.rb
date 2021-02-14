@@ -104,7 +104,11 @@ class Beholder
 
     res = http.request(req)
 
-    JSON.parse(res.body)
+    begin
+      JSON.parse(res.body)
+    rescue
+      []
+    end
   end
 
   def instances_to_check(post)
