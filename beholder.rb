@@ -3,7 +3,7 @@ require 'net/http'
 require 'date'
 
 class Beholder
-  attr_reader :bearer_token, :instance, :attempted_instances, :limit, :last_id, :filename
+  attr_reader :bearer_token, :instance, :attempted_instances, :limit, :last_id, :filename, :attempted_follows
 
   def initialize(filename)
     @filename = filename
@@ -14,6 +14,7 @@ class Beholder
     extract_to_instance_variable(variable: "bearer_token")
     extract_to_instance_variable(variable: "instance")
     extract_to_instance_variable(variable: "attempted_instances", required: false, default: [])
+    extract_to_instance_variable(variable: "attempted_follows", required: false, default: [])
     extract_to_instance_variable(variable: "limit", required: false, default: 20)
     extract_to_instance_variable(variable: "last_id", required: false)
 
@@ -25,16 +26,22 @@ class Beholder
     while true
       @update_info_needed = false
       instances = []
+      follows = []
       next_posts.each do |np|
         instances += instances_to_check(np)
+	follows += follows_to_check(np)
         update_last_id(np)
       end
+
+      follows.reject! { |follow| follow.nil? }
+      follows.uniq!
 
       instances.reject! { |instance| instance.nil? }
       instances.collect! { |instance| instance.downcase }
       instances.uniq!
 
       instances.each { |inst| consider_instance(inst) }
+      follows.each { |foll| consider_follow(foll) }
 
       update_info if @update_info_needed
 
@@ -58,6 +65,28 @@ class Beholder
     f.close
   end
 
+  def consider_follow(follow)
+    return if attempted_follows.include?(follow) or follow == @self
+
+    log "Attempting To Follow New User: #{follow}"
+
+    uri = URI.parse("https://#{@instance}/api/v1/accounts/#{follow}/follow")
+    header = {'Content-Type': 'application/json', 'Authorization': "Bearer #{bearer_token}"}
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    req = Net::HTTP::Post.new(uri.request_uri, header)
+
+    res = http.request(req)
+
+    puts res.body
+
+    attempted_follows.push(follow)
+    @info["attempted_follows"].push(follow)
+    @info["attempted_follows"].uniq!
+    @update_info_needed = true
+  end
 
   def consider_instance(instance)
     return if attempted_instances.include?(instance) or instance == @instance
@@ -113,6 +142,10 @@ class Beholder
 
   def instances_to_check(post)
     post["mentions"].collect { |mention| instance_from_acct(mention["acct"]) } + [instance_from_acct(post["account"]["fqn"])]
+  end
+
+  def follows_to_check(post)
+    post["mentions"].collect { |mention| mention["id"] } + [post["account"]["id"]]
   end
 
   def instance_from_acct(acct)

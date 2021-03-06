@@ -2,6 +2,7 @@
 	"bearer_token":        "YOUR BEARER TOKEN",
 	"instance":            "yourinstance.tld",
 	"attempted_instances": ["someinstance.tld", "someotherinstance.tld"],
+	"attempted_follows":   ["AxExample1", "AXExample2"],
 	"limit":               20,
 	"last_id":             null
 }
